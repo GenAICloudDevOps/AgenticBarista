@@ -1,5 +1,10 @@
 # Environment variables
 .env
+langchain.txt
+langgrapgh.txt
+groq.txt
+cohere.txt
+
 
 # Python
 __pycache__/
@@ -15,6 +20,12 @@ venv/
 node_modules/
 npm-debug.log*
 .npm
+
+# Next.js
+.next/
+out/
+build/
+dist/
 
 # Docker
 .dockerignore
