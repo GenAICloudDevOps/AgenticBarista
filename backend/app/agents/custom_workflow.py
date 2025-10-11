@@ -23,10 +23,12 @@ def analyze_intent(query: str) -> dict:
     
     if any(word in query_lower for word in ["menu", "what", "available", "options"]):
         return {"intent": "browse_menu", "confidence": 0.9}
-    elif any(word in query_lower for word in ["add", "order", "want", "get"]):
+    elif any(word in query_lower for word in ["add", "order", "want", "get", "latte", "espresso", "americano", "cappuccino", "mocha"]):
         return {"intent": "place_order", "confidence": 0.8}
     elif any(word in query_lower for word in ["cart", "total", "summary"]):
         return {"intent": "view_cart", "confidence": 0.9}
+    elif any(word in query_lower for word in ["confirm", "yes", "proceed", "checkout"]):
+        return {"intent": "confirm_order", "confidence": 0.9}
     else:
         return {"intent": "general", "confidence": 0.5}
 
@@ -64,10 +66,36 @@ def menu_node(state: WorkflowState) -> WorkflowState:
 
 def order_node(state: WorkflowState) -> WorkflowState:
     """Handle order placement."""
-    response = "🛒 **Advanced Order System** 🛒\n\nI'd be happy to help you place an order! What would you like to add to your cart?\n\n✨ *Using custom StateGraph routing*"
+    user_message = state["messages"][-1]["content"]
+    
+    # Enhanced order parsing with better item detection
+    items = []
+    menu_items = {
+        "latte": {"name": "Latte", "price": 4.50},
+        "espresso": {"name": "Espresso", "price": 2.50},
+        "americano": {"name": "Americano", "price": 3.00},
+        "cappuccino": {"name": "Cappuccino", "price": 4.00},
+        "mocha": {"name": "Mocha", "price": 5.00}
+    }
+    
+    for item_key, item_data in menu_items.items():
+        if item_key in user_message.lower():
+            items.append({**item_data, "quantity": 1})
+    
+    # Add to cart
+    current_cart = state.get("cart", [])
+    current_cart.extend(items)
+    
+    if items:
+        item_names = [item["name"] for item in items]
+        total = sum(item["price"] * item["quantity"] for item in current_cart)
+        response = f"🛒 **Advanced Order System** 🛒\n\nAdded {', '.join(item_names)} to your cart!\n\nCurrent cart: {len(current_cart)} items (${total:.2f})\n\n✨ *Using custom StateGraph routing*"
+    else:
+        response = "🛒 **Advanced Order System** 🛒\n\nI'd be happy to help you place an order! What would you like to add to your cart?\n\n✨ *Using custom StateGraph routing*"
     
     return {
         **state,
+        "cart": current_cart,
         "messages": state["messages"] + [{"role": "assistant", "content": response}]
     }
 
@@ -106,8 +134,36 @@ How can I help you?"""
         "needs_clarification": False
     }
 
+def confirm_order_node(state: WorkflowState) -> WorkflowState:
+    """Handle order confirmation."""
+    if not state["cart"]:
+        response = "🛒 Your cart is empty! Please add some items first.\n\n✨ *StateGraph order validation*"
+    else:
+        total = sum(item["price"] * item["quantity"] for item in state["cart"])
+        response = f"""✅ **Order Confirmed!** ✅
+
+Your order:
+""" + "\n".join([
+            f"• {item['name']} x{item['quantity']} - ${item['price'] * item['quantity']:.2f}"
+            for item in state["cart"]
+        ]) + f"""
+
+💰 Total: ${total:.2f}
+
+🎉 Thank you! Your order will be ready in 5-10 minutes.
+
+✨ *Powered by StateGraph workflow*"""
+        
+        # Clear cart after confirmation
+        state = {**state, "cart": [], "order_ready": True}
+    
+    return {
+        **state,
+        "messages": state["messages"] + [{"role": "assistant", "content": response}]
+    }
+
 # Conditional Edge Functions
-def route_by_intent(state: WorkflowState) -> Literal["menu", "order", "cart", "clarify"]:
+def route_by_intent(state: WorkflowState) -> Literal["menu", "order", "cart", "confirm", "clarify"]:
     """Route based on detected intent."""
     if state["needs_clarification"]:
         return "clarify"
@@ -116,6 +172,7 @@ def route_by_intent(state: WorkflowState) -> Literal["menu", "order", "cart", "c
         "browse_menu": "menu",
         "place_order": "order", 
         "view_cart": "cart",
+        "confirm_order": "confirm",
         "general": "clarify"
     }
     return intent_map.get(state["intent"], "clarify")
@@ -137,6 +194,7 @@ class CustomWorkflowAgent:
         workflow.add_node("order", order_node)
         workflow.add_node("cart", cart_node)
         workflow.add_node("clarify", clarification_node)
+        workflow.add_node("confirm", confirm_order_node)
         
         # Add edges
         workflow.add_edge(START, "analyze_intent")
@@ -149,6 +207,7 @@ class CustomWorkflowAgent:
         workflow.add_edge("order", END)
         workflow.add_edge("cart", END)
         workflow.add_edge("clarify", END)
+        workflow.add_edge("confirm", END)
         
         return workflow.compile(checkpointer=self.checkpointer)
     
