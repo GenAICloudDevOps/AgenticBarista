@@ -170,6 +170,7 @@ export default function ChatBot() {
       {/* Chat Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        data-chat-toggle
         className="fixed bottom-6 right-6 bg-coffee-600 hover:bg-coffee-700 text-white p-4 rounded-full shadow-lg transition-all z-50"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
@@ -182,7 +183,11 @@ export default function ChatBot() {
           <div className="bg-coffee-600 text-white p-4 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold">Advanced Barista {getAgentIcon(agentType)}</h3>
+                <h3 className="font-semibold">
+                  <span className="bg-gradient-to-r from-yellow-300 via-orange-400 to-amber-500 bg-clip-text text-transparent">
+                    Advanced Barista
+                  </span> {getAgentIcon(agentType)}
+                </h3>
                 <p className="text-sm opacity-90">
                   {agentType === 'advanced' && 'Full LangChain v1 Features'}
                   {agentType === 'workflow' && 'Custom StateGraph Routing'}
@@ -195,17 +200,48 @@ export default function ChatBot() {
             {/* Agent Type Selector */}
             <div className="mt-2 flex gap-1">
               {(['modern', 'advanced', 'workflow'] as AgentType[]).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setAgentType(type)}
-                  className={`px-2 py-1 text-xs rounded ${
-                    agentType === type 
-                      ? 'bg-white text-coffee-600' 
-                      : 'bg-coffee-700 text-white hover:bg-coffee-800'
-                  }`}
-                >
-                  {type}
-                </button>
+                <div key={type} className="relative group">
+                  <button
+                    onClick={() => setAgentType(type)}
+                    className={`px-2 py-1 text-xs rounded ${
+                      agentType === type 
+                        ? 'bg-white text-coffee-600' 
+                        : 'bg-coffee-700 text-white hover:bg-coffee-800'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                  
+                  {/* Hover Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    {type === 'modern' && (
+                      <div>
+                        <div className="font-semibold">🧠 Modern Agent</div>
+                        <div>✓ Create Agent()</div>
+                        <div>✓ Basic Middleware</div>
+                        <div>✓ Reasoning Blocks</div>
+                      </div>
+                    )}
+                    {type === 'advanced' && (
+                      <div>
+                        <div className="font-semibold">🤖 Advanced Agent</div>
+                        <div>✓ Structured Output</div>
+                        <div>✓ Custom Middleware</div>
+                        <div>✓ Enhanced Tools</div>
+                      </div>
+                    )}
+                    {type === 'workflow' && (
+                      <div>
+                        <div className="font-semibold">⚡ Workflow Agent</div>
+                        <div>✓ StateGraph Routing</div>
+                        <div>✓ Conditional Edges</div>
+                        <div>✓ Intent Analysis</div>
+                      </div>
+                    )}
+                    {/* Tooltip Arrow */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
               ))}
             </div>
             
@@ -281,10 +317,13 @@ export default function ChatBot() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg text-sm">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-600">AI is thinking</span>
+                    <div className="flex space-x-1">
+                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce"></div>
+                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -34,9 +34,35 @@ export default function LandingPage() {
               Experience the future of coffee ordering with our AI-powered barista assistant. 
               Get personalized recommendations, smart ordering, and perfect coffee every time using LangChain and LangGraph technology.
             </p>
-            <div className="text-center">
+            
+            {/* CTA Button */}
+            <div className="mb-8">
+              <button 
+                onClick={() => {
+                  const chatButton = document.querySelector('[data-chat-toggle]') as HTMLElement;
+                  if (chatButton) chatButton.click();
+                }}
+                className="bg-coffee-600 hover:bg-coffee-700 text-white font-semibold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                ☕ Try Our AI Barista
+              </button>
+            </div>
+            
+            {/* Coffee Steam Animation */}
+            <div className="relative inline-block">
+              <div className="text-6xl">☕</div>
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className="flex space-x-1">
+                  <div className="w-1 h-8 bg-gray-300 rounded-full opacity-60 animate-pulse" style={{animationDelay: '0s', animationDuration: '2s'}}></div>
+                  <div className="w-1 h-6 bg-gray-400 rounded-full opacity-50 animate-pulse" style={{animationDelay: '0.3s', animationDuration: '2.2s'}}></div>
+                  <div className="w-1 h-7 bg-gray-300 rounded-full opacity-70 animate-pulse" style={{animationDelay: '0.6s', animationDuration: '1.8s'}}></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center mt-6">
               <p className="text-lg text-coffee-600 font-medium">
-                To explore our menu and place orders, use the chat option in the bottom right corner
+                Click the chat button to start your AI coffee experience
               </p>
             </div>
           </div>
