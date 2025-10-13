@@ -114,15 +114,19 @@ export default function ChatBot() {
         mainText = reasoningMatch[2].trim();
       }
 
+      // Build content blocks with reasoning first
+      const contentBlocks: ContentBlock[] = [];
+      if (reasoning) {
+        contentBlocks.push({ type: 'reasoning', reasoning: reasoning });
+      }
+      contentBlocks.push({ type: 'text', text: mainText });
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: mainText,
         isUser: false,
         timestamp: new Date(),
-        content_blocks: reasoning ? [
-          { type: 'reasoning', reasoning: reasoning },
-          { type: 'text', text: mainText }
-        ] : response.data.content_blocks || [],
+        content_blocks: contentBlocks,
         structured_output: response.data.structured_output,
         intent: response.data.intent,
         confidence: response.data.confidence
