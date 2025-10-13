@@ -8,25 +8,25 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 *Landing page with Modern Design and AI features showcase*
 
 ![Screenshot 2](screenshots/2.png)
-*Homepage showing AI-curated menu with Chat Interface*
+*Homepage footer showing LangChain & LangGraph technology stack and statistics*
 
 ![Screenshot 3](screenshots/3.png)
-*DeepAgents chat interface with agent selection (modern, advanced, workflow, deepagents)*
+*DeepAgents chat interface with agent selection (modern, advanced, workflow, deepagents) and tier options (basic, premium)*
 
 ![Screenshot 4](screenshots/4.png)
-*General question: "why people love coffee" with natural AI response*
+*General question with AI Reasoning: "why people love coffee in 2 lines" - shows thinking process before natural response*
 
 ![Screenshot 5](screenshots/5.png)
-*Menu display with AI Reasoning shown - demonstrates thinking process before response*
+*Menu display with AI Reasoning - agent explains "I have retrieved the menu from the tool" before showing coffee items*
 
 ![Screenshot 6](screenshots/6.png)
-*Adding items to cart with AI Reasoning and cart summary with tax calculation*
+*Adding Latte and Americano with AI Reasoning showing successful cart addition confirmation*
 
 ![Screenshot 7](screenshots/7.png)
-*Order confirmation with detailed breakdown: items, subtotal, tax, total, and 5-7 min wait time*
+*Order confirmation with AI Reasoning, detailed breakdown: 1x Latte ($4.50), 1x Americano ($3.00), Subtotal, Tax (8%), Total ($8.10), and "ready in 5-7 minutes" message*
 
 ![Screenshot 8](screenshots/8.png)
-*Complete order flow showing DeepAgents planning and sub-agent coordination*
+*Complete order confirmation showing full details with subtotal, tax calculation, total, and delivery time estimate*
 
 ## Features
 
