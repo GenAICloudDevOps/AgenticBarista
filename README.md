@@ -11,19 +11,22 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 *Homepage showing AI-curated menu with Chat Interface*
 
 ![Screenshot 3](screenshots/3.png)
-*Footer section with statistics and chat interface*
+*DeepAgents chat interface with agent selection (modern, advanced, workflow, deepagents)*
 
 ![Screenshot 4](screenshots/4.png)
-*Chat interface with barista assistant asking "why people love coffee" and AI response*
+*General question: "why people love coffee" with natural AI response*
 
 ![Screenshot 5](screenshots/5.png)
-*Menu display in chat showing coffee items with prices (Espresso $2.50, Americano $3.00)*
+*Menu display with AI Reasoning shown - demonstrates thinking process before response*
 
 ![Screenshot 6](screenshots/6.png)
-*Order processing chat showing "order a Mocha and Latte" with cart confirmation (1 Mocha, 1 Latte)*
+*Adding items to cart with AI Reasoning and cart summary with tax calculation*
 
 ![Screenshot 7](screenshots/7.png)
-*Complete order summary with total and confirmation*
+*Order confirmation with detailed breakdown: items, subtotal, tax, total, and 5-7 min wait time*
+
+![Screenshot 8](screenshots/8.png)
+*Complete order flow showing DeepAgents planning and sub-agent coordination*
 
 ## Features
 
