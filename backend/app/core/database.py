@@ -1,7 +1,7 @@
 from tortoise import Tortoise
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgres://barista:barista123@localhost:5432/baristadb")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgres://barista:barista123@postgres:5432/baristadb")
 
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},

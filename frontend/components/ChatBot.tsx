@@ -46,7 +46,7 @@ interface Message {
   confidence?: number;
 }
 
-type AgentType = 'modern' | 'advanced' | 'workflow';
+type AgentType = 'modern' | 'advanced' | 'workflow' | 'deepagents';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function ChatBot() {
     
     setMessages([{
       id: '1',
-      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n\nHow can I help you today?",
+      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n• DeepAgents: Advanced planning with subagents\n\nHow can I help you today?",
       isUser: false,
       timestamp: new Date()
     }]);
@@ -103,12 +103,26 @@ export default function ChatBot() {
         }
       });
 
+      const responseText = response.data.response;
+      let reasoning = null;
+      let mainText = responseText;
+      
+      // Extract reasoning if present
+      const reasoningMatch = responseText.match(/\[REASONING\](.*?)\[\/REASONING\](.*)/s);
+      if (reasoningMatch) {
+        reasoning = reasoningMatch[1].trim();
+        mainText = reasoningMatch[2].trim();
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.response,
+        text: mainText,
         isUser: false,
         timestamp: new Date(),
-        content_blocks: response.data.content_blocks || [],
+        content_blocks: reasoning ? [
+          { type: 'reasoning', reasoning: reasoning },
+          { type: 'text', text: mainText }
+        ] : response.data.content_blocks || [],
         structured_output: response.data.structured_output,
         intent: response.data.intent,
         confidence: response.data.confidence
@@ -187,6 +201,7 @@ export default function ChatBot() {
     switch (type) {
       case 'advanced': return '🚀';
       case 'workflow': return '⚡';
+      case 'deepagents': return '🧠';
       default: return '🤖';
     }
   };
@@ -228,6 +243,7 @@ export default function ChatBot() {
                   {agentType === 'advanced' && 'Full LangChain v1 Features'}
                   {agentType === 'workflow' && 'Custom StateGraph Routing'}
                   {agentType === 'modern' && 'Basic LangChain v1'}
+                  {agentType === 'deepagents' && 'Deep Planning & Sub-agents'}
                   <span className="ml-2 text-xs bg-white bg-opacity-20 px-2 py-0.5 rounded-full">
                     Currently using {agentType} agent
                   </span>
@@ -238,7 +254,7 @@ export default function ChatBot() {
             
             {/* Agent Type Selector */}
             <div className="mt-2 flex gap-1">
-              {(['modern', 'advanced', 'workflow'] as AgentType[]).map((type) => (
+              {(['modern', 'advanced', 'workflow', 'deepagents'] as AgentType[]).map((type) => (
                 <div key={type} className="relative group">
                   <button
                     onClick={() => setAgentType(type)}
@@ -275,6 +291,14 @@ export default function ChatBot() {
                         <div>✓ StateGraph Routing</div>
                         <div>✓ Conditional Edges</div>
                         <div>✓ Intent Analysis</div>
+                      </div>
+                    )}
+                    {type === 'deepagents' && (
+                      <div>
+                        <div className="font-semibold">🧠 Deep Agent</div>
+                        <div>✓ Planning Tools</div>
+                        <div>✓ Sub-agents</div>
+                        <div>✓ Context Isolation</div>
                       </div>
                     )}
                     {/* Tooltip Arrow */}
