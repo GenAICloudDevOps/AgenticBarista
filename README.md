@@ -8,10 +8,10 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 *Landing page with Modern Design and AI features showcase*
 
 ![Screenshot 2](screenshots/2.png)
-*Homepage footer showing LangChain & LangGraph technology stack and statistics*
+*Homepage showing LangChain & LangGraph technology stack*
 
 ![Screenshot 3](screenshots/3.png)
-*DeepAgents chat interface with agent selection (modern, advanced, workflow, deepagents) and tier options (basic, premium)*
+*Homepage with Menu, Tech and Contact Details*
 
 ![Screenshot 4](screenshots/4.png)
 *General question with AI Reasoning: "why people love coffee in 2 lines" - shows thinking process before natural response*
