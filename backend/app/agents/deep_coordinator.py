@@ -110,7 +110,7 @@ class DeepCoordinatorAgent:
             self.agent = create_deep_agent(
                 tools=[get_menu_items, add_to_cart, show_cart, confirm_order],
                 model=model,
-                instructions="""You are a friendly AI barista assistant for a modern coffee shop.
+                system_prompt="""You are a friendly AI barista assistant for a modern coffee shop.
 
 Your capabilities:
 - Answer general questions about coffee naturally (no tools needed)
@@ -132,12 +132,12 @@ Be warm and helpful!""",
                     {
                         "name": "menu-specialist",
                         "description": "Handles menu queries and recommendations",
-                        "prompt": """You are a coffee menu expert. Help customers explore menu items and make recommendations. Use get_menu_items tool to show the menu."""
+                        "system_prompt": """You are a coffee menu expert. Help customers explore menu items and make recommendations. Use get_menu_items tool to show the menu."""
                     },
                     {
                         "name": "order-processor", 
                         "description": "Manages cart and order operations",
-                        "prompt": """You are an order specialist. Add items to cart using add_to_cart tool and confirm orders using confirm_order tool."""
+                        "system_prompt": """You are an order specialist. Add items to cart using add_to_cart tool and confirm orders using confirm_order tool."""
                     }
                 ]
             )

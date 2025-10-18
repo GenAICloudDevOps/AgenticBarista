@@ -6,9 +6,6 @@ COPY requirements.txt .
 RUN pip install --pre -U langchain
 RUN pip install -r requirements.txt
 
-COPY deepagents /tmp/deepagents
-RUN pip install /tmp/deepagents
-
 COPY . .
 
 EXPOSE 8000
