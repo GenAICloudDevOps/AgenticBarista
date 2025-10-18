@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageCircle, X, Brain, Wrench, Settings, Zap } from 'lucide-react';
+import { Send, MessageCircle, X, Brain, Wrench, Settings, Zap, Mic } from 'lucide-react';
 import axios from 'axios';
 
 // Add CSS animations
@@ -57,6 +57,8 @@ export default function ChatBot() {
   const [agentType, setAgentType] = useState<AgentType>('modern');
   const [userTier, setUserTier] = useState<string>('basic');
   const [showInsights, setShowInsights] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,10 +66,39 @@ export default function ChatBot() {
     
     setMessages([{
       id: '1',
-      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n• DeepAgents: Advanced planning with subagents\n\nHow can I help you today?",
+      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n• DeepAgents: Advanced planning with subagents\n\n🎤 You can now use voice input! Click the microphone button to speak your order.\n\nHow can I help you today?",
       isUser: false,
       timestamp: new Date()
     }]);
+
+    // Initialize speech recognition
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+      
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputText(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone access in your browser settings.');
+        }
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
   }, []);
 
   useEffect(() => {
@@ -150,6 +181,26 @@ export default function ChatBot() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const toggleVoiceInput = () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+    
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        setIsListening(false);
+      }
     }
   };
 
@@ -429,10 +480,22 @@ export default function ChatBot() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Ask the ${agentType} agent...`}
+                placeholder={isListening ? 'Listening...' : `Ask the ${agentType} agent or use voice...`}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coffee-500 text-sm"
-                disabled={isLoading}
+                disabled={isLoading || isListening}
               />
+              <button
+                onClick={toggleVoiceInput}
+                disabled={isLoading}
+                className={`p-2 rounded-lg transition-all ${
+                  isListening 
+                    ? 'bg-red-600 text-white animate-pulse' 
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+                title={isListening ? 'Stop listening' : 'Start voice input'}
+              >
+                <Mic size={16} />
+              </button>
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !inputText.trim()}
@@ -441,6 +504,11 @@ export default function ChatBot() {
                 <Send size={16} />
               </button>
             </div>
+            {isListening && (
+              <div className="mt-2 text-xs text-center text-red-600 flex items-center justify-center">
+                <span className="animate-pulse">🎤 Listening... Speak now</span>
+              </div>
+            )}
           </div>
         </div>
       )}
