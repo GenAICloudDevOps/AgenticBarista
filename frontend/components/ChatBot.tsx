@@ -47,6 +47,7 @@ interface Message {
 }
 
 type AgentType = 'modern' | 'advanced' | 'workflow' | 'deepagents';
+type ModelProvider = 'bedrock' | 'gemini' | 'mistral';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,6 +56,9 @@ export default function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
   const [agentType, setAgentType] = useState<AgentType>('modern');
+  const [modelProvider, setModelProvider] = useState<ModelProvider>('bedrock');
+  const [modelName, setModelName] = useState<string>('amazon.nova-lite-v1:0');
+  const [availableModels, setAvailableModels] = useState<any>({});
   const [userTier, setUserTier] = useState<string>('basic');
   const [showInsights, setShowInsights] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -64,9 +68,20 @@ export default function ChatBot() {
   useEffect(() => {
     setSessionId(Math.random().toString(36).substring(7));
     
+    // Fetch available models
+    const fetchModels = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/models`);
+        setAvailableModels(response.data.models);
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    };
+    fetchModels();
+    
     setMessages([{
       id: '1',
-      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n• DeepAgents: Advanced planning with subagents\n\n🎤 You can now use voice input! Click the microphone button to speak your order.\n\nHow can I help you today?",
+      text: "Welcome to our advanced cafe! ☕ Choose your experience:\n• Modern: Basic LangChain v1 features\n• Advanced: Full middleware & structured output\n• Workflow: Custom StateGraph routing\n• DeepAgents: Advanced planning with subagents\n\n🎤 You can now use voice input! Click the microphone button to speak your order.\n\n🤖 Select your AI model from the dropdown!\n\nHow can I help you today?",
       isUser: false,
       timestamp: new Date()
     }]);
@@ -128,6 +143,8 @@ export default function ChatBot() {
         message: inputText,
         session_id: sessionId,
         agent_type: agentType,
+        model_provider: modelProvider,
+        model_name: modelName,
         user_context: {
           tier: userTier,
           location: 'main_branch'
@@ -307,8 +324,48 @@ export default function ChatBot() {
               <Settings size={16} className="opacity-75" />
             </div>
             
+            {/* Model Provider Selector */}
+            <div className="mt-2">
+              <label className="text-xs text-white opacity-75 mb-1 block">AI Model:</label>
+              <div className="flex gap-2">
+                <select
+                  value={modelProvider}
+                  onChange={(e) => {
+                    const provider = e.target.value as ModelProvider;
+                    setModelProvider(provider);
+                    // Set default model for provider
+                    if (provider === 'bedrock' && availableModels.bedrock) {
+                      setModelName(availableModels.bedrock[0]?.id || 'amazon.nova-lite-v1:0');
+                    } else if (provider === 'gemini' && availableModels.gemini) {
+                      setModelName(availableModels.gemini[0]?.id || 'gemini-1.5-flash');
+                    } else if (provider === 'mistral' && availableModels.mistral) {
+                      setModelName(availableModels.mistral[0]?.id || 'mistral-small-latest');
+                    }
+                  }}
+                  className="flex-1 px-2 py-1 text-xs rounded bg-white text-coffee-600 border-none focus:ring-2 focus:ring-coffee-300"
+                >
+                  <option value="bedrock">AWS Bedrock</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="mistral">Mistral AI</option>
+                </select>
+                <select
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  className="flex-1 px-2 py-1 text-xs rounded bg-white text-coffee-600 border-none focus:ring-2 focus:ring-coffee-300"
+                >
+                  {availableModels[modelProvider]?.map((model: any) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
             {/* Agent Type Selector */}
-            <div className="mt-2 flex gap-1">
+            <div className="mt-2">
+              <label className="text-xs text-white opacity-75 mb-1 block">Agent Type:</label>
+              <div className="flex gap-1">
               {(['modern', 'advanced', 'workflow', 'deepagents'] as AgentType[]).map((type) => (
                 <div key={type} className="relative group">
                   <button
@@ -361,6 +418,7 @@ export default function ChatBot() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
             
             {/* User Tier Selector */}
@@ -415,6 +473,16 @@ export default function ChatBot() {
                         <div className="mt-2 text-xs text-gray-600 flex items-center">
                           <span className="mr-2">⚡</span>
                           Intent: {message.intent} ({Math.round((message.confidence || 0) * 100)}%)
+                        </div>
+                      )}
+                      
+                      {/* Model info badge */}
+                      {!message.isUser && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          <span className="bg-gray-200 px-2 py-0.5 rounded-full">
+                            🤖 {modelProvider === 'bedrock' ? 'AWS Bedrock' : modelProvider === 'gemini' ? 'Google Gemini' : 'Mistral AI'}
+                            {modelName && ` • ${availableModels[modelProvider]?.find((m: any) => m.id === modelName)?.name || modelName.split('-')[0]}`}
+                          </span>
                         </div>
                       )}
                       

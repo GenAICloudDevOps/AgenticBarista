@@ -112,14 +112,14 @@ def response_enhancement_middleware(state, runtime):
     return None
 
 class AdvancedBaristaAgent:
-    def __init__(self):
+    def __init__(self, model_provider: str = "bedrock", model_name: str = None):
         self.checkpointer = InMemorySaver()
+        self.model_provider = model_provider
+        self.model_name = model_name
         
-        # Initialize AWS Bedrock model
-        self.model = ChatBedrock(
-            model="amazon.nova-lite-v1:0",
-            region_name="us-east-1"
-        )
+        # Initialize model using factory
+        from app.core.model_factory import get_model
+        self.model = get_model(provider=model_provider, model_name=model_name)
         
         # Create agent with available advanced features
         self.agent = create_agent(

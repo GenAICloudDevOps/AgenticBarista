@@ -89,22 +89,21 @@ def confirm_order(state: Annotated[dict, InjectedState] = None) -> str:
     return result
 
 class DeepCoordinatorAgent:
-    def __init__(self):
+    def __init__(self, model_provider: str = "bedrock", model_name: str = None):
         self.cart_storage = {}
         self.deepagents_available = False
         self.agent = None
+        self.model_provider = model_provider
+        self.model_name = model_name
         
         # Import deepagents only when needed to avoid startup issues
         try:
             from deepagents import create_deep_agent
-            from langchain_aws import ChatBedrockConverse
+            from app.core.model_factory import get_model
             import os
             
-            # Create Bedrock model
-            model = ChatBedrockConverse(
-                model="amazon.nova-lite-v1:0",
-                region_name=os.getenv("AWS_REGION", "us-east-1"),
-            )
+            # Create model using factory
+            model = get_model(provider=model_provider, model_name=model_name)
             
             # Create deepagent with sync version since tools are sync
             self.agent = create_deep_agent(
