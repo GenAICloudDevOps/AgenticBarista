@@ -35,7 +35,7 @@ def get_model(provider: str = "bedrock", model_name: str = None) -> Any:
         
         # Default Gemini model
         if not model_name:
-            model_name = "gemini-1.5-flash"
+            model_name = "gemini-2.5-flash-lite"
         
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
@@ -52,7 +52,7 @@ def get_model(provider: str = "bedrock", model_name: str = None) -> Any:
         
         # Default Mistral model
         if not model_name:
-            model_name = "mistral-small-latest"
+            model_name = "magistral-small-250925"
         
         api_key = os.getenv("MISTRAL_API_KEY")
         if not api_key:
@@ -80,72 +80,51 @@ AVAILABLE_MODELS = {
         {
             "id": "amazon.nova-lite-v1:0",
             "name": "Nova Lite",
-            "description": "Fast and cost-effective",
-            "cost_per_1m": 0.30
+            "description": "Fast and efficient"
         },
         {
             "id": "amazon.nova-pro-v1:0",
             "name": "Nova Pro",
-            "description": "Balanced performance",
-            "cost_per_1m": 0.80
+            "description": "Balanced performance"
         },
         {
             "id": "anthropic.claude-3-5-sonnet-20241022-v2:0",
             "name": "Claude 3.5 Sonnet",
-            "description": "Highest quality reasoning",
-            "cost_per_1m": 3.00
+            "description": "Highest quality reasoning"
         },
         {
             "id": "anthropic.claude-3-haiku-20240307-v1:0",
             "name": "Claude 3 Haiku",
-            "description": "Fast and efficient",
-            "cost_per_1m": 0.25
+            "description": "Fast and efficient"
         }
     ],
     "gemini": [
         {
-            "id": "gemini-1.5-flash",
-            "name": "Gemini 1.5 Flash",
-            "description": "Very fast and cheap",
-            "cost_per_1m": 0.075
+            "id": "gemini-2.5-flash-lite",
+            "name": "Gemini 2.5 Flash-Lite",
+            "description": "Lightweight and fast"
         },
         {
-            "id": "gemini-1.5-pro",
-            "name": "Gemini 1.5 Pro",
-            "description": "High quality responses",
-            "cost_per_1m": 1.25
+            "id": "gemini-2.5-flash",
+            "name": "Gemini 2.5 Flash",
+            "description": "Fast and capable"
         },
         {
-            "id": "gemini-2.0-flash-exp",
-            "name": "Gemini 2.0 Flash (Experimental)",
-            "description": "Latest experimental model",
-            "cost_per_1m": 0.075
+            "id": "gemini-2.5-pro",
+            "name": "Gemini 2.5 Pro",
+            "description": "High quality responses"
         }
     ],
     "mistral": [
         {
-            "id": "mistral-small-latest",
-            "name": "Mistral Small",
-            "description": "Fast and affordable",
-            "cost_per_1m": 0.20
+            "id": "magistral-small-250925",
+            "name": "Magistral Small 1.2",
+            "description": "Latest reasoning model with vision support (Sep 2025)"
         },
         {
-            "id": "mistral-medium-latest",
-            "name": "Mistral Medium",
-            "description": "Balanced performance",
-            "cost_per_1m": 2.70
-        },
-        {
-            "id": "mistral-large-latest",
-            "name": "Mistral Large",
-            "description": "Most capable model",
-            "cost_per_1m": 8.00
-        },
-        {
-            "id": "open-mistral-7b",
-            "name": "Open Mistral 7B",
-            "description": "Open source, cheapest",
-            "cost_per_1m": 0.10
+            "id": "mistral-small-250625",
+            "name": "Mistral Small 3.2",
+            "description": "Updated small model (Jun 2025)"
         }
     ]
 }
