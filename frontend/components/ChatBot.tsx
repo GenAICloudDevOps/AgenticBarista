@@ -291,7 +291,7 @@ export default function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 w-[480px] h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col z-40">
+        <div className="fixed bottom-20 right-6 w-[560px] h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col z-40">
           {/* Header */}
           <div className="bg-coffee-600 text-white p-4 rounded-t-lg">
             <div className="flex items-center justify-between">
