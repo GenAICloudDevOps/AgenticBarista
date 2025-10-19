@@ -55,9 +55,9 @@ export default function ChatBot() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
-  const [agentType, setAgentType] = useState<AgentType>('modern');
-  const [modelProvider, setModelProvider] = useState<ModelProvider>('bedrock');
-  const [modelName, setModelName] = useState<string>('amazon.nova-lite-v1:0');
+  const [agentType, setAgentType] = useState<AgentType>('deepagents');
+  const [modelProvider, setModelProvider] = useState<ModelProvider>('gemini');
+  const [modelName, setModelName] = useState<string>('gemini-2.5-flash-lite');
   const [availableModels, setAvailableModels] = useState<any>({});
   const [userTier, setUserTier] = useState<string>('basic');
   const [showInsights, setShowInsights] = useState(false);

@@ -38,7 +38,22 @@ def get_enhanced_menu() -> str:
         {"name": "Blueberry Muffin", "price": 3.00, "category": "pastry"}
     ]
     
-    return json.dumps(menu_items, indent=2)
+    # Return formatted text for better display across all models
+    menu_text = "🌟 Enhanced Menu:\n\n"
+    categories = {}
+    for item in menu_items:
+        cat = item['category']
+        if cat not in categories:
+            categories[cat] = []
+        categories[cat].append(item)
+    
+    for category, items in categories.items():
+        menu_text += f"**{category.upper()}**\n"
+        for item in items:
+            menu_text += f"• {item['name']} - ${item['price']:.2f}\n"
+        menu_text += "\n"
+    
+    return menu_text
 
 @tool
 def add_to_enhanced_cart(item_name: str, quantity: int = 1) -> str:
@@ -148,6 +163,9 @@ class AdvancedBaristaAgent:
 • Proactive in suggesting items
 • Knowledgeable about coffee and pastries
 • Helpful with order customization
+
+IMPORTANT: When you use a tool, include the complete tool output in your response.
+For menu requests, display all items with their details in a clear, formatted way.
 
 Always mention you're using "advanced features" when appropriate.""",
             checkpointer=self.checkpointer

@@ -118,25 +118,75 @@ Your capabilities:
 - Show cart using show_cart tool
 - Confirm orders using confirm_order tool when customer says "confirm", "place order", "yes", etc.
 
-IMPORTANT: 
+CRITICAL RULES - READ CAREFULLY: 
 1. When customer says "confirm" or "confirm order", you MUST call the confirm_order tool to place the order.
-2. ALWAYS wrap your reasoning in <thinking></thinking> tags before your response.
 
-Example format:
-<thinking>I need to show the menu to the user using the get_menu_items tool.</thinking>
-Here's our menu...
+2. YOUR RESPONSE FORMAT (MANDATORY):
+   Step 1: Write <thinking>your reasoning here</thinking>
+   Step 2: Write your response to the user AFTER the </thinking> tag
+   
+3. TOOL OUTPUT DISPLAY (MANDATORY):
+   - After ANY tool call, copy the COMPLETE tool output into your response
+   - The tool output goes OUTSIDE and AFTER the </thinking> tag
+   - Do NOT summarize or paraphrase the tool output
+   - Copy it EXACTLY as the tool returns it
+
+4. SPECIFIC TOOL INSTRUCTIONS:
+   - add_to_cart: Show "✓ Added 1x [Item] ($X.XX each)" message
+   - get_menu_items: Show the complete formatted menu
+   - show_cart: Show the complete cart with all items and totals
+   - confirm_order: Show the complete order confirmation
+
+5. FORBIDDEN:
+   - DO NOT put tool outputs inside <thinking> tags
+   - DO NOT say "I've added" without showing the tool output
+   - DO NOT end your response after </thinking> tag without showing tool results
+   - DO NOT generate code snippets like "tool_code print()" or "default_api.confirm_order()"
+   - DO NOT show how to call the tool - just show the tool's output
+
+CORRECT Example for adding item:
+<thinking>User wants to add a latte. I'll call add_to_cart tool.</thinking>
+✓ Added 1x Latte ($4.50 each)
+
+Would you like anything else?
+
+CORRECT Example for confirming order:
+<thinking>User wants to confirm their order. I'll call confirm_order tool.</thinking>
+✓ Order Confirmed!
+
+• 1x Mocha - $5.00
+
+Subtotal: $5.00
+Tax (8%): $0.40
+Total: $5.40
+
+Your order will be ready in 5-7 minutes. Thank you!
+
+WRONG Example (NEVER DO THIS):
+<thinking>User wants to add a latte. I called add_to_cart and it returned: ✓ Added 1x Latte ($4.50 each)</thinking>
+
+WRONG Example 2 (NEVER DO THIS):
+<thinking>User wants to add a latte. I'll call add_to_cart tool.</thinking>
+
+WRONG Example 3 (NEVER DO THIS):
+<thinking>User wants to confirm order.</thinking>
+tool_code print(default_api.confirm_order())
 
 Be warm and helpful!""",
                 subagents=[
                     {
                         "name": "menu-specialist",
                         "description": "Handles menu queries and recommendations",
-                        "system_prompt": """You are a coffee menu expert. Help customers explore menu items and make recommendations. Use get_menu_items tool to show the menu."""
+                        "system_prompt": """You are a coffee menu expert. Help customers explore menu items and make recommendations. 
+                        
+CRITICAL: After calling get_menu_items tool, you MUST display the complete menu output in your response. Never just say "here's the menu" without showing the actual items."""
                     },
                     {
                         "name": "order-processor", 
                         "description": "Manages cart and order operations",
-                        "system_prompt": """You are an order specialist. Add items to cart using add_to_cart tool and confirm orders using confirm_order tool."""
+                        "system_prompt": """You are an order specialist. Add items to cart using add_to_cart tool and confirm orders using confirm_order tool.
+                        
+CRITICAL: After calling add_to_cart, you MUST display the exact confirmation message from the tool (e.g., "✓ Added 1x Mocha ($5.00 each)"). Never just say "added to cart" without showing the tool output."""
                     }
                 ]
             )
@@ -150,6 +200,7 @@ Be warm and helpful!""",
         """Process message using DeepAgents with full functionality"""
         
         if not self.deepagents_available or self.agent is None:
+            print(f"⚠️ DeepAgents not available, using fallback for: {message}")
             return await self._fallback_process(message, session_id)
         
         try:
@@ -233,7 +284,17 @@ Would you like to modify your order or proceed with these items?"""
         
         # Handle add to cart
         if "add" in message.lower():
-            return add_to_cart("requested item")
+            # Extract item name from message
+            message_lower = message.lower()
+            for item_name in MENU_ITEMS.keys():
+                if item_name in message_lower:
+                    # Manually add to cart storage
+                    if session_id not in self.cart_storage:
+                        self.cart_storage[session_id] = {}
+                    self.cart_storage[session_id][item_name] = self.cart_storage[session_id].get(item_name, 0) + 1
+                    price = MENU_ITEMS[item_name]['price']
+                    return f"✓ Added 1x {item_name.title()} (${price:.2f} each)\n\nWould you like anything else?"
+            return "I couldn't find that item. Please check the menu and try again."
         
         # Default response
         return "Welcome to our AI-powered cafe! I can help you with our menu, recommendations, and orders. What can I get you today?"

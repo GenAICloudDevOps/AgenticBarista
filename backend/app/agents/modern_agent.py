@@ -22,7 +22,12 @@ def get_menu_tool() -> str:
             {"name": "Croissant", "price": 3.50, "description": "Buttery French pastry"},
             {"name": "Blueberry Muffin", "price": 3.00, "description": "Fresh baked muffin"}
         ]
-        return json.dumps(menu_items, indent=2)
+        # Return formatted text instead of JSON for better display
+        menu_text = "☕ Our Menu:\n\n"
+        for item in menu_items:
+            menu_text += f"• {item['name']} - ${item['price']:.2f}\n"
+            menu_text += f"  {item['description']}\n\n"
+        return menu_text
     except Exception as e:
         return f"Error getting menu: {str(e)}"
 
@@ -98,7 +103,10 @@ class ModernBaristaAgent:
             ],
             system_prompt="""You are a friendly AI barista at Coffee and AI cafe. 
             Help customers browse the menu, add items to their cart, and place orders.
-            Be conversational and helpful. Always confirm orders before processing.""",
+            Be conversational and helpful. Always confirm orders before processing.
+            
+            IMPORTANT: When you use a tool, include the complete tool output in your response.
+            For menu requests, parse the JSON and display items in a user-friendly format with names, prices, and descriptions.""",
             checkpointer=self.checkpointer
         )
     
