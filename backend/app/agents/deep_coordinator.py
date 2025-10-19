@@ -15,6 +15,19 @@ MENU_ITEMS = {
 
 CART_STORAGE = {}
 
+def clean_response(content: str) -> str:
+    """Remove any code snippets from the response"""
+    import re
+    # Remove tool_code print() patterns
+    content = re.sub(r'tool_code\s+print\([^)]+\)', '', content)
+    # Remove default_api patterns
+    content = re.sub(r'default_api\.[a-zA-Z_]+\([^)]*\)', '', content)
+    # Remove print() patterns
+    content = re.sub(r'print\([^)]+\)', '', content)
+    # Clean up extra whitespace
+    content = re.sub(r'\n\s*\n\s*\n', '\n\n', content)
+    return content.strip()
+
 def get_menu_items(category: str = None) -> str:
     """Get menu items, optionally filtered by category"""
     menu_text = "Menu Items:\n\n"
@@ -65,7 +78,7 @@ def confirm_order(state: Annotated[dict, InjectedState] = None) -> str:
     """Confirm and place the order. Use this when customer says confirm, place order, yes, proceed, etc."""
     session_id = state.get("session_id", "default") if state else "default"
     if session_id not in CART_STORAGE or not CART_STORAGE[session_id]:
-        return "No items in cart"
+        return "Your cart is empty. Please add items before confirming your order."
     
     cart = CART_STORAGE[session_id]
     result = "✓ Order Confirmed!\n\n"
@@ -85,6 +98,7 @@ def confirm_order(state: Annotated[dict, InjectedState] = None) -> str:
     result += f"Total: ${total:.2f}\n\n"
     result += "Your order will be ready in 5-7 minutes. Thank you!"
     
+    # Clear cart after confirmation
     CART_STORAGE[session_id] = {}
     return result
 
@@ -111,6 +125,8 @@ class DeepCoordinatorAgent:
                 model=model,
                 system_prompt="""You are a friendly AI barista assistant for a modern coffee shop.
 
+IMPORTANT: You have access to tools that execute automatically. When you use a tool, it returns text output that you MUST display to the user. NEVER write code or show how to call tools.
+
 Your capabilities:
 - Answer general questions about coffee naturally (no tools needed)
 - Show menu using get_menu_items tool
@@ -118,40 +134,30 @@ Your capabilities:
 - Show cart using show_cart tool
 - Confirm orders using confirm_order tool when customer says "confirm", "place order", "yes", etc.
 
-CRITICAL RULES - READ CAREFULLY: 
-1. When customer says "confirm" or "confirm order", you MUST call the confirm_order tool to place the order.
+CRITICAL RULES: 
+1. When customer says "confirm" or "confirm order", call the confirm_order tool.
 
-2. YOUR RESPONSE FORMAT (MANDATORY):
-   Step 1: Write <thinking>your reasoning here</thinking>
-   Step 2: Write your response to the user AFTER the </thinking> tag
+2. RESPONSE FORMAT:
+   <thinking>your reasoning here</thinking>
+   [Tool output appears here automatically]
+   [Your friendly message to user]
    
-3. TOOL OUTPUT DISPLAY (MANDATORY):
-   - After ANY tool call, copy the COMPLETE tool output into your response
-   - The tool output goes OUTSIDE and AFTER the </thinking> tag
-   - Do NOT summarize or paraphrase the tool output
-   - Copy it EXACTLY as the tool returns it
+3. TOOL OUTPUT:
+   - Tools return formatted text that you MUST include in your response
+   - Display the COMPLETE tool output after </thinking> tag
+   - NEVER write code like "print()" or "tool_code" or "default_api"
+   - Tools execute automatically - just show their results
+   
+4. EXAMPLES OF CORRECT RESPONSES:
 
-4. SPECIFIC TOOL INSTRUCTIONS:
-   - add_to_cart: Show "✓ Added 1x [Item] ($X.XX each)" message
-   - get_menu_items: Show the complete formatted menu
-   - show_cart: Show the complete cart with all items and totals
-   - confirm_order: Show the complete order confirmation
-
-5. FORBIDDEN:
-   - DO NOT put tool outputs inside <thinking> tags
-   - DO NOT say "I've added" without showing the tool output
-   - DO NOT end your response after </thinking> tag without showing tool results
-   - DO NOT generate code snippets like "tool_code print()" or "default_api.confirm_order()"
-   - DO NOT show how to call the tool - just show the tool's output
-
-CORRECT Example for adding item:
-<thinking>User wants to add a latte. I'll call add_to_cart tool.</thinking>
-✓ Added 1x Latte ($4.50 each)
+When adding a mocha:
+<thinking>User wants to add a mocha to their cart.</thinking>
+✓ Added 1x Mocha ($5.00 each)
 
 Would you like anything else?
 
-CORRECT Example for confirming order:
-<thinking>User wants to confirm their order. I'll call confirm_order tool.</thinking>
+When confirming order:
+<thinking>User wants to confirm their order.</thinking>
 ✓ Order Confirmed!
 
 • 1x Mocha - $5.00
@@ -162,17 +168,14 @@ Total: $5.40
 
 Your order will be ready in 5-7 minutes. Thank you!
 
-WRONG Example (NEVER DO THIS):
-<thinking>User wants to add a latte. I called add_to_cart and it returned: ✓ Added 1x Latte ($4.50 each)</thinking>
+5. NEVER DO THIS:
+   - NEVER write: tool_code print(default_api.confirm_order())
+   - NEVER write: print(confirm_order())
+   - NEVER write any Python code
+   - NEVER put tool output inside <thinking> tags
+   - NEVER end response after </thinking> without showing tool results
 
-WRONG Example 2 (NEVER DO THIS):
-<thinking>User wants to add a latte. I'll call add_to_cart tool.</thinking>
-
-WRONG Example 3 (NEVER DO THIS):
-<thinking>User wants to confirm order.</thinking>
-tool_code print(default_api.confirm_order())
-
-Be warm and helpful!""",
+Remember: You are a barista, not a programmer. Display tool results naturally!""",
                 subagents=[
                     {
                         "name": "menu-specialist",
@@ -228,8 +231,49 @@ CRITICAL: After calling add_to_cart, you MUST display the exact confirmation mes
                 else:
                     content = str(last_message)
                 
-                # Extract thinking tags and return separately
+                # Check if the model generated code snippets instead of executing tools
                 import re
+                if 'tool_code' in content or 'default_api' in content or 'print(' in content:
+                    # Model generated code instead of using tools - execute manually
+                    print(f"⚠️ Model generated code snippets, executing tools manually")
+                    
+                    # Check what the user wanted
+                    message_lower = message.lower()
+                    
+                    if any(word in message_lower for word in ['confirm', 'place order', 'yes', 'proceed']):
+                        # Execute confirm_order
+                        result_text = confirm_order(state)
+                        thinking_match = re.search(r'<thinking>(.*?)</thinking>', content, flags=re.DOTALL)
+                        thinking = thinking_match.group(1).strip() if thinking_match else "User wants to confirm their order."
+                        return f"[REASONING]{thinking}[/REASONING]{result_text}"
+                    
+                    elif 'add' in message_lower:
+                        # Extract item name and add to cart
+                        for item_name in MENU_ITEMS.keys():
+                            if item_name in message_lower:
+                                result_text = add_to_cart(item_name, 1, state)
+                                thinking_match = re.search(r'<thinking>(.*?)</thinking>', content, flags=re.DOTALL)
+                                thinking = thinking_match.group(1).strip() if thinking_match else f"User wants to add {item_name}."
+                                return f"[REASONING]{thinking}[/REASONING]{result_text}\n\nWould you like anything else?"
+                    
+                    elif 'cart' in message_lower or 'show' in message_lower:
+                        # Show cart
+                        result_text = show_cart(state)
+                        thinking_match = re.search(r'<thinking>(.*?)</thinking>', content, flags=re.DOTALL)
+                        thinking = thinking_match.group(1).strip() if thinking_match else "User wants to see their cart."
+                        return f"[REASONING]{thinking}[/REASONING]{result_text}"
+                    
+                    elif 'menu' in message_lower:
+                        # Show menu
+                        result_text = get_menu_items()
+                        thinking_match = re.search(r'<thinking>(.*?)</thinking>', content, flags=re.DOTALL)
+                        thinking = thinking_match.group(1).strip() if thinking_match else "User wants to see the menu."
+                        return f"[REASONING]{thinking}[/REASONING]{result_text}"
+                
+                # Clean any code snippets from the response
+                content = clean_response(content)
+                
+                # Extract thinking tags and return separately
                 thinking_match = re.search(r'<thinking>(.*?)</thinking>', content, flags=re.DOTALL)
                 thinking = thinking_match.group(1).strip() if thinking_match else None
                 content = re.sub(r'<thinking>.*?</thinking>\s*', '', content, flags=re.DOTALL).strip()
