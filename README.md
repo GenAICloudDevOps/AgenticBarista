@@ -26,7 +26,6 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 - ✅ Order status tracking (Pending, Confirmed, Preparing, Ready, Completed)
 - ✅ Real-time order updates in user profile
 
-See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) and [EMAIL_SYSTEM_GUIDE.md](EMAIL_SYSTEM_GUIDE.md) for detailed setup instructions.
 
 ## Screenshots
 
