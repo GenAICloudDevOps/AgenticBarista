@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import init_db, close_db
-from app.api import chat, menu, orders
+from app.api import chat, menu, orders, auth, admin
 from app.models.menu import MenuItem
+from app.models.user import User
+from app.core.security import get_password_hash
 import asyncio
 
 app = FastAPI(title="Barista Agentic App", version="1.0.0")
@@ -15,6 +17,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(menu.router, prefix="/api", tags=["menu"])
 app.include_router(orders.router, prefix="/api", tags=["orders"])
@@ -23,6 +27,7 @@ app.include_router(orders.router, prefix="/api", tags=["orders"])
 async def startup_event():
     await init_db()
     await seed_menu_data()
+    await seed_admin_user()
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -48,6 +53,23 @@ async def seed_menu_data():
     
     for item_data in menu_items:
         await MenuItem.create(**item_data)
+
+async def seed_admin_user():
+    # Check if admin user already exists
+    admin = await User.get_or_none(username="admin")
+    if admin:
+        return
+    
+    # Create default admin user
+    await User.create(
+        email="admin@coffeeandai.com",
+        username="admin",
+        full_name="Admin User",
+        hashed_password=get_password_hash("admin123"),
+        is_admin=True,
+        is_active=True
+    )
+    print("Default admin user created: username='admin', password='admin123'")
 
 @app.get("/")
 async def root():

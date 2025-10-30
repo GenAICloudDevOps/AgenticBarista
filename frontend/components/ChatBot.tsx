@@ -139,12 +139,17 @@ export default function ChatBot() {
     setIsLoading(true);
 
     try {
+      // Get logged-in user's email from localStorage
+      const storedUser = localStorage.getItem('user');
+      const userEmail = storedUser ? JSON.parse(storedUser).email : null;
+      
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/chat`, {
         message: inputText,
         session_id: sessionId,
         agent_type: agentType,
         model_provider: modelProvider,
         model_name: modelName,
+        user_email: userEmail,  // Send user email if logged in
         user_context: {
           tier: userTier,
           location: 'main_branch'

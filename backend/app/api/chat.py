@@ -16,10 +16,17 @@ class ChatMessage(BaseModel):
     model_provider: str = "bedrock"  # bedrock, gemini, mistral
     model_name: str = None  # Specific model ID (optional)
     user_context: dict = None
+    user_email: str = None  # Email of logged-in user (for order notifications)
 
 @router.post("/chat")
 async def chat_endpoint(chat_message: ChatMessage):
-    session_id = chat_message.session_id or str(uuid.uuid4())
+    # Use user's email as session_id if logged in, otherwise use random session_id
+    if chat_message.user_email:
+        session_id = chat_message.user_email
+        print(f"[CHAT DEBUG] Using user email as session_id: {session_id}")
+    else:
+        session_id = chat_message.session_id or str(uuid.uuid4())
+        print(f"[CHAT DEBUG] Using random session_id: {session_id}")
     
     # Create agents with selected model
     model_provider = chat_message.model_provider or "bedrock"
@@ -144,6 +151,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             model_provider = message_data.get("model_provider", "bedrock")
             model_name = message_data.get("model_name")
             user_context = message_data.get("user_context")
+            user_email = message_data.get("user_email")  # Get user email if logged in
+            
+            # Use user email as session_id if provided
+            actual_session_id = user_email if user_email else session_id
             
             # Route to appropriate agent with model selection
             if agent_type == "deepagents":
@@ -151,8 +162,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     model_provider=model_provider,
                     model_name=model_name
                 )
-                response = await deep_agent.process_message(message, session_id)
-                cart = deep_agent.cart_storage.get(session_id, {})
+                response = await deep_agent.process_message(message, actual_session_id)
+                cart = deep_agent.cart_storage.get(actual_session_id, {})
                 total = await _calculate_cart_total(cart)
                 result = {
                     "response": response,
@@ -173,14 +184,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     model_provider=model_provider,
                     model_name=model_name
                 )
-                result = await advanced_agent.process_message(message, session_id, user_context)
+                result = await advanced_agent.process_message(message, actual_session_id, user_context)
                 result["model_info"] = {
                     "provider": model_provider,
                     "model": model_name or "default"
                 }
             elif agent_type == "workflow":
                 workflow_agent = CustomWorkflowAgent()
-                result = await workflow_agent.process_message(message, session_id)
+                result = await workflow_agent.process_message(message, actual_session_id)
                 result["model_info"] = {
                     "provider": "workflow",
                     "model": "rule-based"
@@ -190,7 +201,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     model_provider=model_provider,
                     model_name=model_name
                 )
-                result = await modern_agent.process_message(message, session_id)
+                result = await modern_agent.process_message(message, actual_session_id)
                 result["model_info"] = {
                     "provider": model_provider,
                     "model": model_name or "default"

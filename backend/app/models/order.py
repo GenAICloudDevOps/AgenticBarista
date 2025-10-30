@@ -1,8 +1,9 @@
 from tortoise.models import Model
 from tortoise import fields
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from typing import Optional, List, Dict
 from enum import Enum
+from datetime import datetime
 
 class OrderStatus(str, Enum):
     PENDING = "pending"
@@ -32,9 +33,17 @@ class OrderItemSchema(BaseModel):
 class OrderSchema(BaseModel):
     id: Optional[int] = None
     customer_id: int
-    items: List[OrderItemSchema]
+    items: List[Dict]  # Changed from List[OrderItemSchema] to List[Dict] for flexibility
     total: float
     status: OrderStatus = OrderStatus.PENDING
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    @field_serializer('created_at', 'updated_at')
+    def serialize_datetime(self, dt: Optional[datetime], _info):
+        if dt:
+            return dt.isoformat()
+        return None
 
     class Config:
         from_attributes = True

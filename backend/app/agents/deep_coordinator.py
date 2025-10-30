@@ -74,13 +74,86 @@ def show_cart(state: Annotated[dict, InjectedState] = None) -> str:
     result += f"Total: ${total:.2f}\n"
     return result
 
+async def confirm_order_async(session_id: str, cart: dict) -> tuple[str, int]:
+    """Save order to database and send email"""
+    from app.models.customer import Customer
+    from app.models.order import Order, OrderStatus
+    from app.models.menu import MenuItem
+    from app.models.user import User
+    from app.core.email import send_order_confirmation_email
+    
+    # Get or create customer
+    customer, created = await Customer.get_or_create(session_id=session_id)
+    
+    # Calculate total and create order items
+    subtotal = 0
+    order_items = []
+    
+    for item_key, qty in cart.items():
+        # Find menu item by name
+        menu_item = await MenuItem.filter(name__iexact=item_key).first()
+        if menu_item:
+            item_total = float(menu_item.price) * qty
+            subtotal += item_total
+            order_items.append({
+                "item_id": menu_item.id,
+                "name": menu_item.name,
+                "quantity": qty,
+                "price": float(menu_item.price)
+            })
+    
+    # Add tax (8%)
+    tax = subtotal * 0.08
+    total = subtotal + tax
+    
+    # Create order
+    order = await Order.create(
+        customer=customer,
+        items=order_items,
+        total=total,
+        status=OrderStatus.CONFIRMED
+    )
+    
+    # Try to send email
+    email_sent = False
+    try:
+        print(f"[EMAIL DEBUG] Looking for user with email: {session_id}")
+        user = await User.get_or_none(email=session_id)
+        if user:
+            print(f"[EMAIL DEBUG] User found: {user.username}, sending email...")
+            email_sent = await send_order_confirmation_email(
+                user_email=user.email,
+                username=user.username,
+                order_id=order.id,
+                items=order_items,
+                total=total
+            )
+            print(f"[EMAIL DEBUG] Email sent: {email_sent}")
+        else:
+            print(f"[EMAIL DEBUG] No user found with email: {session_id}")
+    except Exception as e:
+        print(f"[EMAIL DEBUG] Error sending email: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    
+    return order.id, email_sent
+
+# Global storage for pending orders
+PENDING_ORDERS = {}
+
 def confirm_order(state: Annotated[dict, InjectedState] = None) -> str:
     """Confirm and place the order. Use this when customer says confirm, place order, yes, proceed, etc."""
+    print(f"[CONFIRM DEBUG] confirm_order tool called!")
     session_id = state.get("session_id", "default") if state else "default"
+    print(f"[CONFIRM DEBUG] Session ID: {session_id}")
+    print(f"[CONFIRM DEBUG] Cart storage keys: {list(CART_STORAGE.keys())}")
+    
     if session_id not in CART_STORAGE or not CART_STORAGE[session_id]:
+        print(f"[CONFIRM DEBUG] Cart is empty for session: {session_id}")
         return "Your cart is empty. Please add items before confirming your order."
     
-    cart = CART_STORAGE[session_id]
+    cart = CART_STORAGE[session_id].copy()
+    print(f"[CONFIRM DEBUG] Cart contents: {cart}")
     result = "✓ Order Confirmed!\n\n"
     subtotal = 0
     
@@ -96,10 +169,22 @@ def confirm_order(state: Annotated[dict, InjectedState] = None) -> str:
     result += f"\nSubtotal: ${subtotal:.2f}\n"
     result += f"Tax (8%): ${tax:.2f}\n"
     result += f"Total: ${total:.2f}\n\n"
+    
+    # Store order for async processing
+    print(f"[CONFIRM DEBUG] Storing pending order for session: {session_id}")
+    PENDING_ORDERS[session_id] = {
+        'cart': cart,
+        'total': total,
+        'subtotal': subtotal,
+        'tax': tax
+    }
+    print(f"[CONFIRM DEBUG] Pending orders: {list(PENDING_ORDERS.keys())}")
+    
     result += "Your order will be ready in 5-7 minutes. Thank you!"
     
     # Clear cart after confirmation
     CART_STORAGE[session_id] = {}
+    print(f"[CONFIRM DEBUG] Cart cleared for session: {session_id}")
     return result
 
 class DeepCoordinatorAgent:
@@ -278,6 +363,29 @@ CRITICAL: After calling add_to_cart, you MUST display the exact confirmation mes
                 thinking = thinking_match.group(1).strip() if thinking_match else None
                 content = re.sub(r'<thinking>.*?</thinking>\s*', '', content, flags=re.DOTALL).strip()
                 
+                # Process pending orders (save to DB and send email)
+                # Check both session_id and "default" since DeepAgent uses "default"
+                pending_key = None
+                if session_id in PENDING_ORDERS:
+                    pending_key = session_id
+                elif "default" in PENDING_ORDERS:
+                    pending_key = "default"
+                
+                if pending_key:
+                    try:
+                        print(f"[ORDER DEBUG] Processing pending order for key: {pending_key}, using session_id: {session_id}")
+                        order_data = PENDING_ORDERS[pending_key]
+                        order_id, email_sent = await confirm_order_async(session_id, order_data['cart'])
+                        content += f"\n\nOrder #{order_id}"
+                        if email_sent:
+                            content += "\n📧 Confirmation email sent!"
+                        del PENDING_ORDERS[pending_key]
+                        print(f"[ORDER DEBUG] Order processed successfully: #{order_id}, email_sent: {email_sent}")
+                    except Exception as e:
+                        print(f"[ORDER DEBUG] Error processing pending order: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                
                 if thinking:
                     return f"[REASONING]{thinking}[/REASONING]{content}"
                 return content
@@ -286,6 +394,8 @@ CRITICAL: After calling add_to_cart, you MUST display the exact confirmation mes
                 
         except Exception as e:
             print(f"DeepAgent error: {e}")
+            import traceback
+            traceback.print_exc()
             return await self._fallback_process(message, session_id)
     
     async def _fallback_process(self, message: str, session_id: str) -> str:
