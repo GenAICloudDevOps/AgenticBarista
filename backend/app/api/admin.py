@@ -8,6 +8,7 @@ from app.core.email import (
     send_admin_notification,
     send_email
 )
+from app.core.slack import send_order_ready_notification
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
@@ -228,11 +229,19 @@ async def update_order_status(
     order.status = status_update.status
     await order.save()
     
-    # If order is ready, send notification email
+    # If order is ready, send notification email and Slack
     if status_update.status == OrderStatus.READY:
         customer = await order.customer
         user = await User.get_or_none(email=customer.session_id)
         
+        # Send Slack notification
+        try:
+            customer_name = customer.session_id.split('@')[0] if '@' in customer.session_id else customer.session_id[:8]
+            await send_order_ready_notification(order.id, customer_name)
+        except Exception as e:
+            print(f"Failed to send Slack notification: {str(e)}")
+        
+        # Send email if user is registered
         if user:
             try:
                 await send_order_ready_email(

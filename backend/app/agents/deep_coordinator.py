@@ -81,6 +81,7 @@ async def confirm_order_async(session_id: str, cart: dict) -> tuple[str, int]:
     from app.models.menu import MenuItem
     from app.models.user import User
     from app.core.email import send_order_confirmation_email
+    from app.core.slack import send_new_order_notification
     
     # Get or create customer
     customer, created = await Customer.get_or_create(session_id=session_id)
@@ -113,6 +114,23 @@ async def confirm_order_async(session_id: str, cart: dict) -> tuple[str, int]:
         total=total,
         status=OrderStatus.CONFIRMED
     )
+    
+    print(f"[ORDER DEBUG] Order created with ID: {order.id}")
+    
+    # Send Slack notification (non-blocking)
+    try:
+        customer_name = session_id.split('@')[0] if '@' in session_id else session_id[:8]
+        slack_sent = await send_new_order_notification(
+            order_id=order.id,
+            customer=customer_name,
+            total=total,
+            items_count=len(order_items)
+        )
+        print(f"[SLACK DEBUG] Slack notification sent: {slack_sent}")
+    except Exception as e:
+        print(f"[SLACK DEBUG] Failed to send Slack notification: {str(e)}")
+        import traceback
+        traceback.print_exc()
     
     # Try to send email
     email_sent = False

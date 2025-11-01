@@ -11,6 +11,7 @@ from app.core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.core.email import send_welcome_email
+from app.core.slack import send_new_user_notification
 
 router = APIRouter()
 
@@ -46,6 +47,12 @@ async def register(user_data: UserCreate):
         await send_welcome_email(user.email, user.username)
     except Exception as e:
         print(f"Failed to send welcome email: {str(e)}")
+    
+    # Send Slack notification (non-blocking)
+    try:
+        await send_new_user_notification(user.username, user.email)
+    except Exception as e:
+        print(f"Failed to send Slack notification: {str(e)}")
     
     return UserResponse.from_orm(user)
 

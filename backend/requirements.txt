@@ -37,3 +37,6 @@ bcrypt==4.0.1
 # Email notifications
 aiosmtplib==3.0.1
 
+# Slack notifications
+aiohttp==3.9.1
+

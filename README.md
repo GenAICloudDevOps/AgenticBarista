@@ -2,6 +2,20 @@
 
 A professional cafe application with AI-powered chatbot using multi-agent architecture, built with FastAPI, Next.js, PostgreSQL, and AWS Bedrock.
 
+## 🎉 Latest Updates
+
+### Slack Integration
+We've integrated **Slack notifications** to keep your team informed in real-time:
+- 🟢 **New User Registrations** - Get notified when someone joins
+- 🟠 **New Orders** - Instant alerts with order details (ID, customer, total, items)
+- 🔵 **Order Ready** - Notify when orders are ready for pickup
+- ⚡ **Async & Non-blocking** - Doesn't slow down your app
+- 🔧 **Easy Setup** - Just add your Slack webhook URL to `.env`
+
+**Test it:** Run `python backend/test_slack.py` to verify your setup!
+
+---
+
 ## 🆕 New Features
 
 ### 🔐 Authentication System
@@ -19,6 +33,15 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 - ✅ Admin bulk email capabilities
 - ✅ Gmail SMTP integration with app-specific passwords
 - ✅ Automatic email sending when logged-in users place orders
+
+### 💬 Slack Notifications
+- ✅ Real-time notifications to Slack workspace
+- ✅ New user registration alerts (green notification)
+- ✅ New order notifications with order details (amber notification)
+- ✅ Order ready for pickup alerts (blue notification)
+- ✅ Webhook-based integration with rich message formatting
+- ✅ Non-blocking async notifications
+- ✅ Works with all agent types (Modern, Advanced, Workflow, DeepAgents)
 
 ### 📊 Order Management
 - ✅ Complete order history for authenticated users
@@ -56,10 +79,11 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 ## Features
 
 - **Multi-Agent Architecture**: Specialized agents for menu, orders, and confirmations
-- **AI-Powered Chat**: Natural language ordering using AWS Bedrock Nova Lite model
+- **AI-Powered Chat**: Natural language ordering using AWS Bedrock, Google Gemini, or Mistral AI
 - **Professional UI**: Modern landing page with integrated chatbot and authentication
 - **User Authentication**: Secure JWT-based login/registration with profile management
 - **Email Notifications**: Automated emails for registration and order confirmations
+- **Slack Notifications**: Real-time alerts for new users, orders, and order status updates
 - **Real-time Ordering**: Add items to cart, view totals with tax, and confirm orders
 - **Order History**: Complete order tracking for authenticated users
 - **Database Integration**: PostgreSQL with Tortoise ORM and Aerich migrations
@@ -69,7 +93,8 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
 - **Backend**: FastAPI, LangChain (prerelease), LangGraph, Tortoise ORM, Aerich
 - **Frontend**: Next.js, TypeScript, Tailwind CSS
 - **Database**: PostgreSQL
-- **AI**: AWS Bedrock (Nova Lite)
+- **AI**: AWS Bedrock (Nova Lite), Google Gemini, Mistral AI
+- **Notifications**: Gmail SMTP, Slack Webhooks
 - **Deployment**: Docker Compose
 
 ## Quick Start
@@ -99,6 +124,9 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
    SMTP_PASSWORD=your-gmail-app-password
    SMTP_FROM_EMAIL=your-email@gmail.com
    SMTP_FROM_NAME=Coffee and AI
+   
+   # Slack Notifications (optional)
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
    ```
 
 3. **Generate a secure SECRET_KEY**:
@@ -111,18 +139,30 @@ A professional cafe application with AI-powered chatbot using multi-agent archit
    - Scroll to "App passwords" and generate one
    - Use this password in `SMTP_PASSWORD`
 
-5. **Test authentication and email** (optional):
+5. **Setup Slack Notifications** (optional):
+   - Go to https://api.slack.com/messaging/webhooks
+   - Create an Incoming Webhook for your workspace
+   - Copy the webhook URL to `SLACK_WEBHOOK_URL` in `.env`
+
+6. **Test authentication, email, and Slack** (optional but recommended):
    ```bash
    cd backend
+   
+   # Test email notifications
    python test_auth_email.py
+   
+   # Test Slack notifications
+   python test_slack.py
    ```
+   
+   The Slack test will send 5 different notification types to verify your setup.
 
-6. **Run the application**:
+7. **Run the application**:
    ```bash
    docker-compose up -d --build
    ```
 
-7. **Access the application**:
+8. **Access the application**:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
@@ -218,10 +258,66 @@ aerich upgrade
 - `PUT /api/admin/users/{user_id}` - Update user
 - `DELETE /api/admin/users/{user_id}` - Delete user
 - `POST /api/admin/email/bulk` - Send bulk emails
+- `PUT /api/admin/orders/{order_id}/status` - Update order status (triggers notifications)
 
 ## Environment Variables
 
-See `.env.example` for required configuration.
+See `.env.example` for required configuration:
+
+### Required
+- `DATABASE_URL` - PostgreSQL connection string
+- `SECRET_KEY` - JWT token secret (generate with `openssl rand -hex 32`)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` - AWS Bedrock credentials
+
+### Optional AI Providers
+- `GOOGLE_API_KEY` - For Google Gemini models
+- `MISTRAL_API_KEY` - For Mistral AI models
+
+### Email Notifications (Optional)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` - Gmail SMTP settings
+- `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` - Email sender details
+
+### Slack Notifications (Optional)
+- `SLACK_WEBHOOK_URL` - Slack incoming webhook URL for notifications
+
+## Troubleshooting
+
+### Slack Notifications Not Working?
+
+1. **Check webhook URL**: Make sure `SLACK_WEBHOOK_URL` in `.env` is correct
+2. **Test connection**: Run `python backend/test_slack.py` to verify
+3. **Check logs**: Look for `[SLACK DEBUG]` messages in backend logs
+4. **Verify permissions**: Ensure webhook has permission to post to the channel
+5. **Restart backend**: After changing `.env`, restart with `docker-compose restart backend`
+
+### Email Notifications Not Working?
+
+1. **Gmail App Password**: Make sure you're using an app-specific password, not your regular password
+2. **2FA Required**: Gmail requires 2-Factor Authentication to generate app passwords
+3. **Test email**: Run `python backend/test_auth_email.py` to verify SMTP settings
+4. **Check logs**: Look for `[EMAIL DEBUG]` messages in backend logs
+
+### Order Notifications Not Received?
+
+- **For logged-in users**: Notifications are sent to the email used during registration
+- **For guest users**: Only Slack notifications are sent (no email)
+- **Check agent type**: Make sure you're using the correct agent (DeepAgents recommended)
+
+## Changelog
+
+### December 2024
+- ✅ **Slack Integration**: Added real-time Slack notifications for user registrations, new orders, and order status updates
+- ✅ **Multi-Model Support**: Added Google Gemini and Mistral AI alongside AWS Bedrock
+- ✅ **Enhanced Testing**: Added `test_slack.py` for comprehensive Slack notification testing
+- ✅ **Improved Logging**: Added detailed debug logs for email and Slack notifications
+- ✅ **Secret Key Generation**: Automated secure secret key generation for JWT tokens
+
+### November 2024
+- ✅ Email notifications for user registration and order confirmations
+- ✅ User authentication with JWT tokens
+- ✅ Order history and profile management
+- ✅ Multi-agent architecture with LangChain and LangGraph
+- ✅ Initial release with AWS Bedrock integration
 
 ## License
 
