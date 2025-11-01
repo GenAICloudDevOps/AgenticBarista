@@ -52,29 +52,41 @@ We've integrated **Slack notifications** to keep your team informed in real-time
 
 ## Screenshots
 
-![Screenshot 1](screenshots/1.png)
+![Screenshot 1](screenshots/1.jpg)
 *Landing page with Modern Design and AI features showcase*
 
-![Screenshot 2](screenshots/2.png)
-*Homepage showing LangChain & LangGraph technology stack*
+![Screenshot 2](screenshots/2.jpg)
+*Homepage showing technology stack*
 
-![Screenshot 3](screenshots/3.png)
-*Homepage with Menu, Tech and Contact Details*
+![Screenshot 3](screenshots/3.jpg)
+*user registration*
 
-![Screenshot 4](screenshots/4.png)
-*General question with AI Reasoning: "why people love coffee in 2 lines" - shows thinking process before natural response*
+![Screenshot 4](screenshots/4.jpg)
+*Logged in Customer Details*
 
-![Screenshot 5](screenshots/5.png)
-*Menu display with AI Reasoning - agent explains "I have retrieved the menu from the tool" before showing coffee items*
+![Screenshot 5](screenshots/5.jpg)
+*Chat Interface*
 
-![Screenshot 6](screenshots/6.png)
-*Adding Latte and Americano with AI Reasoning showing successful cart addition confirmation*
+![Screenshot 6](screenshots/6.jpg)
+*User asking Whats in the menu - AI reasoning and menu is shown*
 
-![Screenshot 7](screenshots/7.png)
-*Order confirmation with AI Reasoning, detailed breakdown: 1x Latte ($4.50), 1x Americano ($3.00), Subtotal, Tax (8%), Total ($8.10), and "ready in 5-7 minutes" message*
+![Screenshot 7](screenshots/7.jpg)
+*User adding an item - AI reasoning with adding to cart is shown*
 
-![Screenshot 8](screenshots/8.png)
-*Complete order confirmation showing full details with subtotal, tax calculation, total, and delivery time estimate*
+![Screenshot 8](screenshots/8.jpg)
+*Order confirmation - Complete details with subtotal, tax calculation, and estimated time*
+
+![Screenshot 9](screenshots/9.jpg)
+*slack notifications for new user registraion and order confirmations*
+
+![Screenshot 10](screenshots/10.jpg)
+*Welcome email to customer*
+
+![Screenshot 11](screenshots/11.jpg)
+*Order confirmation email to customers*
+
+![Screenshot 12](screenshots/12.jpg)
+*Customer order history*
 
 ## Features
 
@@ -302,22 +314,6 @@ See `.env.example` for required configuration:
 - **For logged-in users**: Notifications are sent to the email used during registration
 - **For guest users**: Only Slack notifications are sent (no email)
 - **Check agent type**: Make sure you're using the correct agent (DeepAgents recommended)
-
-## Changelog
-
-### December 2024
-- ✅ **Slack Integration**: Added real-time Slack notifications for user registrations, new orders, and order status updates
-- ✅ **Multi-Model Support**: Added Google Gemini and Mistral AI alongside AWS Bedrock
-- ✅ **Enhanced Testing**: Added `test_slack.py` for comprehensive Slack notification testing
-- ✅ **Improved Logging**: Added detailed debug logs for email and Slack notifications
-- ✅ **Secret Key Generation**: Automated secure secret key generation for JWT tokens
-
-### November 2024
-- ✅ Email notifications for user registration and order confirmations
-- ✅ User authentication with JWT tokens
-- ✅ Order history and profile management
-- ✅ Multi-agent architecture with LangChain and LangGraph
-- ✅ Initial release with AWS Bedrock integration
 
 ## License
 
