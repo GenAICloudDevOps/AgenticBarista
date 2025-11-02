@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: barista-app
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
+      containers:
+      - name: backend
+        image: barista-backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        # From ConfigMap
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DATABASE_URL
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: AWS_REGION
+        - name: ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: ALGORITHM
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: ACCESS_TOKEN_EXPIRE_MINUTES
+        - name: SMTP_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: SMTP_HOST
+        - name: SMTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: SMTP_PORT
+        - name: SMTP_FROM_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: SMTP_FROM_EMAIL
+        - name: SMTP_FROM_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: SMTP_FROM_NAME
+        # From Secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AWS_SECRET_ACCESS_KEY
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: GOOGLE_API_KEY
+        - name: MISTRAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: MISTRAL_API_KEY
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: SECRET_KEY
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: SMTP_USER
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: SMTP_PASSWORD
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: SLACK_WEBHOOK_URL
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

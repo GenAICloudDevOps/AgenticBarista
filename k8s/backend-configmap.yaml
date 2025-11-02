@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: barista-app
+data:
+  # Database Configuration
+  DATABASE_URL: "postgres://barista:barista123@postgres:5432/baristadb"
+  
+  # AWS Region
+  AWS_REGION: "us-east-1"
+  
+  # Authentication Configuration
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  
+  # SMTP Configuration
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_FROM_EMAIL: "aclouddevops@gmail.com"
+  SMTP_FROM_NAME: "Coffee and AI"

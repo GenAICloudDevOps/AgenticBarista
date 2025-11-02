@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: barista-app
+  labels:
+    name: barista-app
+    app: coffee-ai

@@ -107,9 +107,78 @@ We've integrated **Slack notifications** to keep your team informed in real-time
 - **Database**: PostgreSQL
 - **AI**: AWS Bedrock (Nova Lite), Google Gemini, Mistral AI
 - **Notifications**: Gmail SMTP, Slack Webhooks
-- **Deployment**: Docker Compose
+- **Deployment**: Docker Compose, Kubernetes
 
-## Quick Start
+## 🚀 Deployment Options
+
+This application supports two deployment methods:
+
+### Option 1: Docker Compose (Recommended for Local Development)
+
+**Best for:** Quick local development and testing
+
+**Features:**
+- ✅ Simple one-command setup
+- ✅ Uses `.env` file for configuration
+- ✅ Lower resource usage (~2GB RAM)
+- ✅ Fast startup and rebuild
+- ✅ Easy to debug and develop
+
+**Quick Start:**
+```bash
+docker-compose up -d --build
+```
+
+**Access:** http://localhost:3000
+
+📖 **Full guide:** See [Quick Start](#quick-start) section below
+
+---
+
+### Option 2: Kubernetes (Production-like Environment)
+
+**Best for:** Learning Kubernetes, production-like testing, scalability testing
+
+**Features:**
+- ✅ Auto-healing and self-recovery
+- ✅ Horizontal scaling (multiple replicas)
+- ✅ Production-ready architecture
+- ✅ Persistent storage with PVCs
+- ✅ Rolling updates with zero downtime
+- ✅ Resource limits and health checks
+
+**Quick Start:**
+```bash
+# Build Docker images
+./build-images.sh  # or build-images.bat on Windows
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/
+```
+
+**Access:** http://localhost:3000
+
+📖 **Full guides:** 
+- Quick start: [KUBERNETES-DEPLOYMENT.md](KUBERNETES-DEPLOYMENT.md)
+- Detailed reference: [k8s/README.md](k8s/README.md)
+
+---
+
+### 📋 Comparison
+
+| Feature | Docker Compose | Kubernetes |
+|---------|----------------|------------|
+| **Setup Complexity** | ⭐ Easy | ⭐⭐⭐ Moderate |
+| **Resource Usage** | ~2GB RAM | ~4-6GB RAM |
+| **Startup Time** | ~30 seconds | ~2-3 minutes |
+| **Auto-healing** | ❌ No | ✅ Yes |
+| **Scaling** | Manual | Automatic |
+| **Load Balancing** | ❌ No | ✅ Yes |
+| **Best For** | Local Dev | Production-like |
+
+---
+
+## Quick Start (Docker Compose)
 
 1. **Clone and setup**:
    ```bash
